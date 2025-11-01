@@ -1175,5 +1175,138 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+// Initialize sample data if none exists - add this to ALL pages
+function initializeSampleData() {
+  const existingData = localStorage.getItem('limelightConsignments');
+  if (!existingData || existingData === '[]') {
+    const sampleData = [
+      {
+        cn: "1234",
+        train: "DLI-2345-EXP",
+        origin: "Mumbai Warehouse",
+        current: "Delhi Distribution Center",
+        destination: "Chennai Retail Hub",
+        dispatched: "2024-03-20T10:00",
+        expected: "2024-03-25T18:00",
+        status: "In Transit",
+        invoice: "INV-20240320-001",
+        document: {
+          type: "pdf",
+          url: "#",
+          preview: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYjI0Ii8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIxMCIgZmlsbD0iIzIzMjgzMCIgcng9IjUiLz48dGV4dCB4PSIyMCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiI+SW52b2ljZSBQcmV2aWV3PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5JbnZvaWNlICM6IElOVi0yMDI0MDMyMC0wMDE8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5Db25zaWdubWVudCAjOiAxMjM0PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+VHJhaW4gIzogRExJLTIzNDUtRVhQIChMb2FkZWQpPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+T3JpZ2luOiBNdW1iYWkgfCBEZXN0aW5hdGlvbjogQ2hlbm5haTwvdGV4dD48dGV4dCB4PSIzMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiPkVzdGltYXRlZCBEZWxpdmVyeTogTWFyY2ggMjUsIDIwMjQ8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5TdGF0dXM6IEluIFRyYW5zaXQ8L3RleHQ+PC9zdmc+"
+        },
+        timeline: [
+          {
+            time: "2024-03-20T10:00",
+            location: "Mumbai Warehouse",
+            status: "Dispatched from origin"
+          },
+          {
+            time: "2024-03-21T14:30",
+            location: "Delhi Distribution Center",
+            status: "In transit - processing",
+            current: true
+          }
+        ]
+      },
+      {
+        cn: "5678",
+        train: "MUM-9876-FRT",
+        origin: "Delhi Distribution Center",
+        current: "In Transit",
+        destination: "Kolkata Terminal",
+        dispatched: "2024-03-22T09:00",
+        expected: "2024-03-27T16:00",
+        status: "Dispatched",
+        invoice: "INV-20240322-002",
+        document: {
+          type: "image",
+          url: "#",
+          preview: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYjI0Ii8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIxMCIgZmlsbD0iIzIzMjgzMCIgcng9IjUiLz48dGV4dCB4PSIyMCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiI+SW52b2ljZSBQcmV2aWV3PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5JbnZvaWNlICM6IElOVi0yMDI0MDMyMi0wMDI8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5Db25zaWdubWVudCAjOiA1Njc4PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+VHJhaW4gIzogTVVNLTEyMzQtRlJUPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+T3JpZ2luOiBEZWxoaSB8IERlc3RpbmF0aW9uOiBLb2xrYXRhPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIyMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+RXN0aW1hdGVkIERlbGl2ZXJ5OiBNYXJjaCAyNywgMjAyNDwvdGV4dD48dGV4dCB4PSIzMCIgeT0iMjMwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiPlN0YXR1czogRGlzcGF0Y2hlZDwvdGV4dD48L3N2Zz4="
+        },
+        timeline: [
+          {
+            time: "2024-03-22T09:00",
+            location: "Delhi Distribution Center",
+            status: "Dispatched",
+            current: true
+          }
+        ]
+      }
+    ];
+    
+    localStorage.setItem('limelightConsignments', JSON.stringify(sampleData));
+    console.log('Sample data initialized with 2 consignments');
+  }
+}
+
+// Initialize when any page loads
+document.addEventListener('DOMContentLoaded', function() {
+  initializeSampleData();
+});
+</script>
+
+<script>
+  // Add this to ALL pages (index.html, server.html, view-consignments.html)
+function getConsignments() {
+  const savedConsignments = localStorage.getItem('limelightConsignments');
+  
+  if (savedConsignments) {
+    return JSON.parse(savedConsignments);
+  } else {
+    // Return empty array if no data exists
+    return [];
+  }
+}
+
+function initializeSampleData() {
+  const existingData = localStorage.getItem('limelightConsignments');
+  
+  if (!existingData || existingData === '[]') {
+    const sampleData = [
+      {
+        cn: "1234",
+        train: "DLI-2345-EXP",
+        origin: "Mumbai Warehouse",
+        current: "Delhi Distribution Center",
+        destination: "Chennai Retail Hub",
+        dispatched: "2024-03-20T10:00",
+        expected: "2024-03-25T18:00",
+        status: "In Transit",
+        invoice: "INV-20240320-001",
+        document: {
+          type: "pdf",
+          url: "#",
+          preview: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYjI0Ii8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIxMCIgZmlsbD0iIzIzMjgzMCIgcng9IjUiLz48dGV4dCB4PSIyMCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiI+SW52b2ljZSBQcmV2aWV3PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5JbnZvaWNlICM6IElOVi0yMDI0MDMyMC0wMDE8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5Db25zaWdubWVudCAjOiAxMjM0PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+VHJhaW4gIzogRExJLTIzNDUtRVhQIChMb2FkZWQpPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+T3JpZ2luOiBNdW1iYWkgfCBEZXN0aW5hdGlvbjogQ2hlbm5haTwvdGV4dD48dGV4dCB4PSIzMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiPkVzdGltYXRlZCBEZWxpdmVyeTogTWFyY2ggMjUsIDIwMjQ8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5TdGF0dXM6IEluIFRyYW5zaXQ8L3RleHQ+PC9zdmc+"
+        },
+        timeline: [
+          {
+            time: "2024-03-20T10:00",
+            location: "Mumbai Warehouse",
+            status: "Dispatched from origin"
+          },
+          {
+            time: "2024-03-21T14:30",
+            location: "Delhi Distribution Center",
+            status: "In transit - processing",
+            current: true
+          }
+        ]
+      }
+    ];
+    
+    localStorage.setItem('limelightConsignments', JSON.stringify(sampleData));
+    console.log('Sample data initialized');
+  }
+}
+
+// Initialize when any page loads
+document.addEventListener('DOMContentLoaded', function() {
+  initializeSampleData();
+});
+
+</script>
+
 </body>
 </html>
