@@ -694,6 +694,20 @@
           <i class="fas fa-search"></i> Track Now
         </button>
       </div>
+      <!-- Add this temporarily to index.html after the search box -->
+<div style="text-align: center; margin: 10px;">
+  <button onclick="debugStorage()" style="background: #666; padding: 8px 15px;">
+    <i class="fas fa-bug"></i> Debug Storage
+  </button>
+</div>
+
+<script>
+function debugStorage() {
+  const consignments = getConsignments();
+  console.log('All consignments in storage:', consignments);
+  alert('Check console for storage contents. Total consignments: ' + consignments.length);
+}
+</script>
       <div style="margin-top: 20px; font-size: 14px; color: #aaa;">
         <p>Try these sample CN numbers: 1234</p>
       </div>
@@ -745,56 +759,55 @@
   }
 }
 
-    // Track consignment function
-    function trackConsignment() {
-      const cnInput = document.getElementById('cnNumber').value.trim();
-      const resultDiv = document.getElementById('result');
-      const errorDiv = document.getElementById('error-message');
+   function trackConsignment() {
+  const cnInput = document.getElementById('cnNumber').value.trim();
+  const resultDiv = document.getElementById('result');
+  const errorDiv = document.getElementById('error-message');
 
-      // Get consignments from localStorage
-      const consignments = getConsignments();
+  // Get consignments from localStorage using the unified function
+  const consignments = getConsignments();
 
-      // Find the consignment with matching CN number
-      const consignment = consignments.find(c => c.cn === cnInput);
+  // Find the consignment with matching CN number
+  const consignment = consignments.find(c => c.cn === cnInput);
 
-      if (consignment) {
-        // Update main details
-        document.getElementById('detail-cn').textContent = consignment.cn;
-        document.getElementById('detail-train').textContent = consignment.train;
-        document.getElementById('detail-origin').textContent = consignment.origin;
-        document.getElementById('detail-current').textContent = consignment.current;
-        document.getElementById('detail-destination').textContent = consignment.destination;
-        document.getElementById('detail-dispatched').textContent = formatDateTime(consignment.dispatched);
-        document.getElementById('detail-expected').textContent = formatDateTime(consignment.expected);
-        document.getElementById('detail-status').textContent = consignment.status;
-        document.getElementById('detail-invoice').textContent = consignment.invoice;
+  if (consignment) {
+    // Update main details
+    document.getElementById('detail-cn').textContent = consignment.cn;
+    document.getElementById('detail-train').textContent = consignment.train;
+    document.getElementById('detail-origin').textContent = consignment.origin;
+    document.getElementById('detail-current').textContent = consignment.current;
+    document.getElementById('detail-destination').textContent = consignment.destination;
+    document.getElementById('detail-dispatched').textContent = formatDateTime(consignment.dispatched);
+    document.getElementById('detail-expected').textContent = formatDateTime(consignment.expected);
+    document.getElementById('detail-status').textContent = consignment.status;
+    document.getElementById('detail-invoice').textContent = consignment.invoice;
 
-        // Update document preview
-        const docPreview = document.getElementById('document-preview');
-        docPreview.innerHTML = `
-          <img src="${consignment.document.preview}" alt="Document Preview">
-          <button class="download-btn" onclick="window.open('${consignment.document.url}')">
-            <i class="fas fa-download"></i> Download ${consignment.document.type.toUpperCase()}
-          </button>
-        `;
+    // Update document preview
+    const docPreview = document.getElementById('document-preview');
+    docPreview.innerHTML = `
+      <img src="${consignment.document.preview}" alt="Document Preview">
+      <button class="download-btn" onclick="window.open('${consignment.document.url}')">
+        <i class="fas fa-download"></i> Download ${consignment.document.type.toUpperCase()}
+      </button>
+    `;
 
-        // Update timeline
-        const timelineDiv = document.getElementById('status-timeline');
-        timelineDiv.innerHTML = consignment.timeline.map(event => `
-          <div class="status-item ${event.current ? 'current' : ''}">
-            <div class="timeline-time">${formatDateTime(event.time)}</div>
-            <div class="timeline-location">${event.location}</div>
-            <div class="timeline-activity">${event.status}</div>
-          </div>
-        `).join('');
+    // Update timeline
+    const timelineDiv = document.getElementById('status-timeline');
+    timelineDiv.innerHTML = consignment.timeline.map(event => `
+      <div class="status-item ${event.current ? 'current' : ''}">
+        <div class="timeline-time">${formatDateTime(event.time)}</div>
+        <div class="timeline-location">${event.location}</div>
+        <div class="timeline-activity">${event.status}</div>
+      </div>
+    `).join('');
 
-        resultDiv.style.display = 'block';
-        errorDiv.style.display = 'none';
-      } else {
-        resultDiv.style.display = 'none';
-        errorDiv.style.display = 'block';
-      }
-    }
+    resultDiv.style.display = 'block';
+    errorDiv.style.display = 'none';
+  } else {
+    resultDiv.style.display = 'none';
+    errorDiv.style.display = 'block';
+  }
+}
 
     // Format date-time for display
     function formatDateTime(dateTimeString) {
@@ -964,6 +977,67 @@ function initializeSampleData() {
 document.addEventListener('DOMContentLoaded', function() {
   initializeSampleData();
 });
+</script>
+
+<script>
+  // Add this to ALL pages (index.html, server.html, view-consignments.html)
+function getConsignments() {
+  const savedConsignments = localStorage.getItem('limelightConsignments');
+  
+  if (savedConsignments) {
+    return JSON.parse(savedConsignments);
+  } else {
+    // Return empty array if no data exists
+    return [];
+  }
+}
+
+function initializeSampleData() {
+  const existingData = localStorage.getItem('limelightConsignments');
+  
+  if (!existingData || existingData === '[]') {
+    const sampleData = [
+      {
+        cn: "1234",
+        train: "DLI-2345-EXP",
+        origin: "Mumbai Warehouse",
+        current: "Delhi Distribution Center",
+        destination: "Chennai Retail Hub",
+        dispatched: "2024-03-20T10:00",
+        expected: "2024-03-25T18:00",
+        status: "In Transit",
+        invoice: "INV-20240320-001",
+        document: {
+          type: "pdf",
+          url: "#",
+          preview: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYjI0Ii8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIxMCIgZmlsbD0iIzIzMjgzMCIgcng9IjUiLz48dGV4dCB4PSIyMCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiI+SW52b2ljZSBQcmV2aWV3PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5JbnZvaWNlICM6IElOVi0yMDI0MDMyMC0wMDE8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5Db25zaWdubWVudCAjOiAxMjM0PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+VHJhaW4gIzogRExJLTIzNDUtRVhQIChMb2FkZWQpPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+T3JpZ2luOiBNdW1iYWkgfCBEZXN0aW5hdGlvbjogQ2hlbm5haTwvdGV4dD48dGV4dCB4PSIzMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiPkVzdGltYXRlZCBEZWxpdmVyeTogTWFyY2ggMjUsIDIwMjQ8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5TdGF0dXM6IEluIFRyYW5zaXQ8L3RleHQ+PC9zdmc+"
+        },
+        timeline: [
+          {
+            time: "2024-03-20T10:00",
+            location: "Mumbai Warehouse",
+            status: "Dispatched from origin"
+          },
+          {
+            time: "2024-03-21T14:30",
+            location: "Delhi Distribution Center",
+            status: "In transit - processing",
+            current: true
+          }
+        ]
+      }
+    ];
+    
+    localStorage.setItem('limelightConsignments', JSON.stringify(sampleData));
+    console.log('Sample data initialized');
+  }
+}
+
+// Initialize when any page loads
+document.addEventListener('DOMContentLoaded', function() {
+  initializeSampleData();
+});
+
 </script>
 
 </body>
