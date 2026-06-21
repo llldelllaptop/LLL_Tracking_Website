@@ -902,7 +902,7 @@ function formatDateTime(dateTimeString) {
 </script>
 
 <script>
-// Initialize sample data if none exists - add this to ALL pages
+
 function initializeSampleData() {
   const existingData = localStorage.getItem('limelightConsignments');
   if (!existingData || existingData === '[]') {
@@ -959,35 +959,6 @@ function initializeSampleData() {
             current: true
           }
         ]
-      },
-      {
-        cn: "998877",
-        train: "DLI-2345-EXP",
-        origin: "Mumbai Warehouse",
-        current: "Delhi Distribution Center",
-        destination: "Chennai Retail Hub",
-        dispatched: "2024-03-20T10:00",
-        expected: "2024-03-25T18:00",
-        status: "In Transit",
-        invoice: "998877",
-        document: {
-          type: "pdf",
-          url: "https://acrobat.adobe.com/id/urn:aaid:sc:AP:6e76d85a-18f2-4942-95ef-e0625c18504c",
-          preview: "https://acrobat.adobe.com/id/urn:aaid:sc:AP:6e76d85a-18f2-4942-95ef-e0625c18504c",
-        },
-        timeline: [
-          {
-            time: "2024-03-20T10:00",
-            location: "CHECKING",
-            status: "Dispatched from origin"
-          },
-          {
-            time: "2024-03-21T14:30",
-            location: "Delhi Distribution Center",
-            status: "In transit - processing",
-            current: true
-          }
-        ]
       }
     ];
     
@@ -1002,25 +973,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script>
-  // Add this to ALL pages (index.html, server.html, view-consignments.html)
-function getConsignments() {
-  const savedConsignments = localStorage.getItem('limelightConsignments');
-  
-  if (savedConsignments) {
-    return JSON.parse(savedConsignments);
-  } else {
-    // Return empty array if no data exists
-    return [];
-  }
-}
-
-// Initialize when any page loads
-document.addEventListener('DOMContentLoaded', function() {
-  initializeSampleData();
-});
-
-</script>
 
 </body>
 </html>
