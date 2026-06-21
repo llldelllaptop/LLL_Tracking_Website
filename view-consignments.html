@@ -845,233 +845,6 @@
   <footer>
     All rights reserved &copy; 2012 Limelight Logistics - Consignments Portal
   </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Get DOM elements
-      const consignmentsGrid = document.getElementById('consignments-grid');
-      const emptyState = document.getElementById('empty-state');
-      const searchInput = document.getElementById('search-input');
-      const statusFilter = document.getElementById('status-filter');
-      const sortBy = document.getElementById('sort-by');
-      const totalConsignments = document.getElementById('total-consignments');
-      const inTransit = document.getElementById('in-transit');
-      const delivered = document.getElementById('delivered');
-      const onHold = document.getElementById('on-hold');
-
-      
-      // Load and display consignments
-      loadConsignments();
-      
-      // Add event listeners for search and filter
-      searchInput.addEventListener('input', loadConsignments);
-      statusFilter.addEventListener('change', loadConsignments);
-      sortBy.addEventListener('change', loadConsignments);
-      
-      function loadConsignments() {
-        // Get consignments from localStorage
-        const consignments = getConsignments();
-        
-        // Update stats
-        updateStats(consignments);
-        
-        // Filter consignments
-        const searchTerm = searchInput.value.toLowerCase();
-        const statusValue = statusFilter.value;
-        
-        let filteredConsignments = consignments.filter(consignment => {
-          const matchesSearch = 
-            consignment.cn.toLowerCase().includes(searchTerm) ||
-            consignment.train.toLowerCase().includes(searchTerm) ||
-            consignment.origin.toLowerCase().includes(searchTerm) ||
-            consignment.destination.toLowerCase().includes(searchTerm);
-          
-          const matchesStatus = statusValue === 'all' || consignment.status === statusValue;
-          
-          return matchesSearch && matchesStatus;
-        });
-        
-        // Sort consignments
-        const sortValue = sortBy.value;
-        filteredConsignments.sort((a, b) => {
-          switch(sortValue) {
-            case 'newest':
-              return new Date(b.dispatched) - new Date(a.dispatched);
-            case 'oldest':
-              return new Date(a.dispatched) - new Date(b.dispatched);
-            case 'cn':
-              return a.cn.localeCompare(b.cn);
-            case 'status':
-              return a.status.localeCompare(b.status);
-            default:
-              return 0;
-          }
-        });
-        
-        // Display consignments or empty state
-        if (filteredConsignments.length === 0) {
-          consignmentsGrid.style.display = 'none';
-          emptyState.style.display = 'block';
-        } else {
-          consignmentsGrid.style.display = 'grid';
-          emptyState.style.display = 'none';
-          displayConsignments(filteredConsignments);
-        }
-      }
-      
-      function getConsignments() {
-        const savedConsignments = localStorage.getItem('limelightConsignments');
-        
-        if (savedConsignments) {
-          return JSON.parse(savedConsignments);
-        } else {
-          // Return empty array if no data exists
-          return [];
-        }
-      }
-      
-      function updateStats(consignments) {
-        totalConsignments.textContent = consignments.length;
-        
-        const statusCounts = {
-          'In Transit': 0,
-          'Delivered': 0,
-          'On Hold': 0,
-          'Dispatched': 0,
-          'Out for Delivery': 0
-        };
-        
-        consignments.forEach(consignment => {
-          if (statusCounts.hasOwnProperty(consignment.status)) {
-            statusCounts[consignment.status]++;
-          }
-        });
-        
-        inTransit.textContent = statusCounts['In Transit'] + statusCounts['Out for Delivery'];
-        delivered.textContent = statusCounts['Delivered'];
-        onHold.textContent = statusCounts['On Hold'];
-      }
-      
-      function displayConsignments(consignments) {
-        consignmentsGrid.innerHTML = '';
-        
-        consignments.forEach(consignment => {
-          const card = document.createElement('div');
-          card.className = 'consignment-card';
-          
-          // Format dates
-          const dispatchedDate = formatDateTimeForDisplay(consignment.dispatched);
-          const expectedDate = formatDateTimeForDisplay(consignment.expected);
-          
-          // Get status class
-          let statusClass = 'status-transit';
-          if (consignment.status === 'Delivered') statusClass = 'status-delivered';
-          if (consignment.status === 'On Hold') statusClass = 'status-hold';
-          if (consignment.status === 'Dispatched') statusClass = 'status-dispatched';
-          if (consignment.status === 'Out for Delivery') statusClass = 'status-transit';
-          
-          card.innerHTML = `
-            <div class="consignment-header">
-              <div class="consignment-id">${consignment.cn}</div>
-              <div class="consignment-status ${statusClass}">${consignment.status}</div>
-            </div>
-            <div class="consignment-details">
-              <div class="consignment-detail">
-                <div class="detail-label">Train:</div>
-                <div class="detail-value">${consignment.train}</div>
-              </div>
-              <div class="consignment-detail">
-                <div class="detail-label">Origin:</div>
-                <div class="detail-value">${consignment.origin}</div>
-              </div>
-              <div class="consignment-detail">
-                <div class="detail-label">Destination:</div>
-                <div class="detail-value">${consignment.destination}</div>
-              </div>
-              <div class="consignment-detail">
-                <div class="detail-label">Dispatched:</div>
-                <div class="detail-value">${dispatchedDate}</div>
-              </div>
-              <div class="consignment-detail">
-                <div class="detail-label">Expected:</div>
-                <div class="detail-value">${expectedDate}</div>
-              </div>
-              <div class="consignment-detail">
-                <div class="detail-label">Invoice:</div>
-                <div class="detail-value">${consignment.invoice}</div>
-              </div>
-            </div>
-            <div class="consignment-actions">
-              <button class="action-btn btn-view" onclick="viewConsignment('${consignment.cn}')">
-                <i class="fas fa-eye"></i> View
-              </button>
-              <button class="action-btn btn-edit" onclick="editConsignment('${consignment.cn}')">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="action-btn btn-delete" onclick="deleteConsignment('${consignment.cn}')">
-                <i class="fas fa-trash"></i> Delete
-              </button>
-            </div>
-          `;
-          
-          consignmentsGrid.appendChild(card);
-        });
-      }
-      
-      function formatDateTimeForDisplay(dateTimeString) {
-        if (!dateTimeString) return '-';
-        
-        const dateTime = dateTimeString.includes('T') 
-          ? new Date(dateTimeString) 
-          : new Date(dateTimeString.replace(' ', 'T'));
-        
-        return isNaN(dateTime.getTime()) 
-          ? dateTimeString 
-          : dateTime.toLocaleDateString();
-      }
-    });
-    
-    function viewConsignment(cnNumber) {
-      alert(`Viewing details for consignment: ${cnNumber}\n\nIn a complete implementation, this would show a detailed view with timeline and documents.`);
-    }
-    
-    function editConsignment(cnNumber) {
-      // Store the CN number to edit in localStorage
-      localStorage.setItem('editConsignment', cnNumber);
-      // Redirect to the data entry page
-      window.location.href = 'server.html';
-    }
-    
-    function deleteConsignment(cnNumber) {
-      if (confirm(`Are you sure you want to delete consignment ${cnNumber}? This action cannot be undone.`)) {
-        const consignments = JSON.parse(localStorage.getItem('limelightConsignments') || '[]');
-        const filtered = consignments.filter(c => c.cn !== cnNumber);
-        localStorage.setItem('limelightConsignments', JSON.stringify(filtered));
-        
-        // Reload the page to reflect changes
-        window.location.reload();
-      }
-    }
-  </script>
-
-  <!-- Ripple Effect -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      document.addEventListener('click', function(e) {
-        const ripple = document.createElement('div');
-        ripple.className = 'click-ripple';
-        ripple.style.left = e.clientX + 'px';
-        ripple.style.top = e.clientY + 'px';
-        document.body.appendChild(ripple);
-        
-        // Remove ripple after animation completes
-        setTimeout(() => {
-          ripple.remove();
-        }, 600);
-      });
-    });
-  </script>
-
 <script>
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function() {
@@ -1100,6 +873,291 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+});
+
+// ====== FIX: getConsignments function ======
+function getConsignments() {
+  const saved = localStorage.getItem('limelightConsignments');
+  return saved ? JSON.parse(saved) : [];
+}
+
+// ====== FIX: Initialize sample data ======
+function initializeSampleData() {
+  const existingData = localStorage.getItem('limelightConsignments');
+  if (!existingData || existingData === '[]') {
+    const sampleData = [
+      {
+        cn: "1234",
+        train: "DLI-2345-EXP",
+        origin: "Mumbai Warehouse",
+        current: "Delhi Distribution Center",
+        destination: "Chennai Retail Hub",
+        dispatched: "2024-03-20T10:00",
+        expected: "2024-03-25T18:00",
+        status: "In Transit",
+        invoice: "INV-20240320-001",
+        document: {
+          type: "pdf",
+          url: "#",
+          preview: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYjI0Ii8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIxMCIgZmlsbD0iIzIzMjgzMCIgcng9IjUiLz48dGV4dCB4PSIyMCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiI+SW52b2ljZSBQcmV2aWV3PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5JbnZvaWNlICM6IElOVi0yMDI0MDMyMC0wMDE8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5Db25zaWdubWVudCAjOiAxMjM0PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+VHJhaW4gIzogRExJLTIzNDUtRVhQIChMb2FkZWQpPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+T3JpZ2luOiBNdW1iYWkgfCBEZXN0aW5hdGlvbjogQ2hlbm5haTwvdGV4dD48dGV4dCB4PSIzMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiPkVzdGltYXRlZCBEZWxpdmVyeTogTWFyY2ggMjUsIDIwMjQ8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5TdGF0dXM6IEluIFRyYW5zaXQ8L3RleHQ+PC9zdmc+"
+        },
+        timeline: [
+          {
+            time: "2024-03-20T10:00",
+            location: "Mumbai Warehouse",
+            status: "Dispatched from origin"
+          },
+          {
+            time: "2024-03-21T14:30",
+            location: "Delhi Distribution Center",
+            status: "In transit - processing",
+            current: true
+          }
+        ]
+      },
+      {
+        cn: "5678",
+        train: "MUM-9876-FRT",
+        origin: "Delhi Distribution Center",
+        current: "In Transit",
+        destination: "Kolkata Terminal",
+        dispatched: "2024-03-22T09:00",
+        expected: "2024-03-27T16:00",
+        status: "Dispatched",
+        invoice: "INV-20240322-002",
+        document: {
+          type: "image",
+          url: "#",
+          preview: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYjI0Ii8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIxMCIgZmlsbD0iIzIzMjgzMCIgcng9IjUiLz48dGV4dCB4PSIyMCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiI+SW52b2ljZSBQcmV2aWV3PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5JbnZvaWNlICM6IElOVi0yMDI0MDMyMi0wMDI8L3RleHQ+PHRleHQgeD0iMzAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjZmZmIj5Db25zaWdubWVudCAjOiA1Njc4PC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+VHJhaW4gIzogTVVNLTEyMzQtRlJUPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+T3JpZ2luOiBEZWxoaSB8IERlc3RpbmF0aW9uOiBLb2xrYXRhPC90ZXh0Pjx0ZXh0IHg9IjMwIiB5PSIyMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiI+RXN0aW1hdGVkIERlbGl2ZXJ5OiBNYXJjaCAyNywgMjAyNDwvdGV4dD48dGV4dCB4PSIzMCIgeT0iMjMwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiPlN0YXR1czogRGlzcGF0Y2hlZDwvdGV4dD48L3N2Zz4="
+        },
+        timeline: [
+          {
+            time: "2024-03-22T09:00",
+            location: "Delhi Distribution Center",
+            status: "Dispatched",
+            current: true
+          }
+        ]
+      }
+    ];
+    
+    localStorage.setItem('limelightConsignments', JSON.stringify(sampleData));
+    console.log('Sample data initialized with 2 consignments');
+  }
+}
+
+// Main page functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize sample data first
+  initializeSampleData();
+  
+  // Get DOM elements
+  const consignmentsGrid = document.getElementById('consignments-grid');
+  const emptyState = document.getElementById('empty-state');
+  const searchInput = document.getElementById('search-input');
+  const statusFilter = document.getElementById('status-filter');
+  const sortBy = document.getElementById('sort-by');
+  const totalConsignments = document.getElementById('total-consignments');
+  const inTransit = document.getElementById('in-transit');
+  const delivered = document.getElementById('delivered');
+  const onHold = document.getElementById('on-hold');
+
+  // Load and display consignments
+  loadConsignments();
+  
+  // Add event listeners for search and filter
+  searchInput.addEventListener('input', loadConsignments);
+  statusFilter.addEventListener('change', loadConsignments);
+  sortBy.addEventListener('change', loadConsignments);
+  
+  function loadConsignments() {
+    // Get consignments from localStorage
+    const consignments = getConsignments();
+    
+    // Update stats
+    updateStats(consignments);
+    
+    // Filter consignments
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusValue = statusFilter.value;
+    
+    let filteredConsignments = consignments.filter(consignment => {
+      const matchesSearch = 
+        consignment.cn.toLowerCase().includes(searchTerm) ||
+        consignment.train.toLowerCase().includes(searchTerm) ||
+        consignment.origin.toLowerCase().includes(searchTerm) ||
+        consignment.destination.toLowerCase().includes(searchTerm);
+      
+      const matchesStatus = statusValue === 'all' || consignment.status === statusValue;
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    // Sort consignments
+    const sortValue = sortBy.value;
+    filteredConsignments.sort((a, b) => {
+      switch(sortValue) {
+        case 'newest':
+          return new Date(b.dispatched) - new Date(a.dispatched);
+        case 'oldest':
+          return new Date(a.dispatched) - new Date(b.dispatched);
+        case 'cn':
+          return a.cn.localeCompare(b.cn);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        default:
+          return 0;
+      }
+    });
+    
+    // Display consignments or empty state
+    if (filteredConsignments.length === 0) {
+      consignmentsGrid.style.display = 'none';
+      emptyState.style.display = 'block';
+    } else {
+      consignmentsGrid.style.display = 'grid';
+      emptyState.style.display = 'none';
+      displayConsignments(filteredConsignments);
+    }
+  }
+  
+  function updateStats(consignments) {
+    totalConsignments.textContent = consignments.length;
+    
+    const statusCounts = {
+      'In Transit': 0,
+      'Delivered': 0,
+      'On Hold': 0,
+      'Dispatched': 0,
+      'Out for Delivery': 0
+    };
+    
+    consignments.forEach(consignment => {
+      if (statusCounts.hasOwnProperty(consignment.status)) {
+        statusCounts[consignment.status]++;
+      }
+    });
+    
+    inTransit.textContent = statusCounts['In Transit'] + statusCounts['Out for Delivery'];
+    delivered.textContent = statusCounts['Delivered'];
+    onHold.textContent = statusCounts['On Hold'];
+  }
+  
+  function displayConsignments(consignments) {
+    consignmentsGrid.innerHTML = '';
+    
+    consignments.forEach(consignment => {
+      const card = document.createElement('div');
+      card.className = 'consignment-card';
+      
+      // Format dates
+      const dispatchedDate = formatDateTimeForDisplay(consignment.dispatched);
+      const expectedDate = formatDateTimeForDisplay(consignment.expected);
+      
+      // Get status class
+      let statusClass = 'status-transit';
+      if (consignment.status === 'Delivered') statusClass = 'status-delivered';
+      if (consignment.status === 'On Hold') statusClass = 'status-hold';
+      if (consignment.status === 'Dispatched') statusClass = 'status-dispatched';
+      if (consignment.status === 'Out for Delivery') statusClass = 'status-transit';
+      
+      card.innerHTML = `
+        <div class="consignment-header">
+          <div class="consignment-id">${consignment.cn}</div>
+          <div class="consignment-status ${statusClass}">${consignment.status}</div>
+        </div>
+        <div class="consignment-details">
+          <div class="consignment-detail">
+            <div class="detail-label">Train:</div>
+            <div class="detail-value">${consignment.train}</div>
+          </div>
+          <div class="consignment-detail">
+            <div class="detail-label">Origin:</div>
+            <div class="detail-value">${consignment.origin}</div>
+          </div>
+          <div class="consignment-detail">
+            <div class="detail-label">Destination:</div>
+            <div class="detail-value">${consignment.destination}</div>
+          </div>
+          <div class="consignment-detail">
+            <div class="detail-label">Dispatched:</div>
+            <div class="detail-value">${dispatchedDate}</div>
+          </div>
+          <div class="consignment-detail">
+            <div class="detail-label">Expected:</div>
+            <div class="detail-value">${expectedDate}</div>
+          </div>
+          <div class="consignment-detail">
+            <div class="detail-label">Invoice:</div>
+            <div class="detail-value">${consignment.invoice}</div>
+          </div>
+        </div>
+        <div class="consignment-actions">
+          <button class="action-btn btn-view" onclick="viewConsignment('${consignment.cn}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+          <button class="action-btn btn-edit" onclick="editConsignment('${consignment.cn}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="action-btn btn-delete" onclick="deleteConsignment('${consignment.cn}')">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      `;
+      
+      consignmentsGrid.appendChild(card);
+    });
+  }
+  
+  function formatDateTimeForDisplay(dateTimeString) {
+    if (!dateTimeString) return '-';
+    
+    const dateTime = dateTimeString.includes('T') 
+      ? new Date(dateTimeString) 
+      : new Date(dateTimeString.replace(' ', 'T'));
+    
+    return isNaN(dateTime.getTime()) 
+      ? dateTimeString 
+      : dateTime.toLocaleDateString();
+  }
+});
+
+function viewConsignment(cnNumber) {
+  alert(`Viewing details for consignment: ${cnNumber}\n\nIn a complete implementation, this would show a detailed view with timeline and documents.`);
+}
+
+function editConsignment(cnNumber) {
+  // Store the CN number to edit in localStorage
+  localStorage.setItem('editConsignment', cnNumber);
+  // Redirect to the data entry page
+  window.location.href = 'server.html';
+}
+
+function deleteConsignment(cnNumber) {
+  if (confirm(`Are you sure you want to delete consignment ${cnNumber}? This action cannot be undone.`)) {
+    const consignments = JSON.parse(localStorage.getItem('limelightConsignments') || '[]');
+    const filtered = consignments.filter(c => c.cn !== cnNumber);
+    localStorage.setItem('limelightConsignments', JSON.stringify(filtered));
+    
+    // Reload the page to reflect changes
+    window.location.reload();
+  }
+}
+
+// Ripple Effect
+document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('click', function(e) {
+    const ripple = document.createElement('div');
+    ripple.className = 'click-ripple';
+    ripple.style.left = e.clientX + 'px';
+    ripple.style.top = e.clientY + 'px';
+    document.body.appendChild(ripple);
+    
+    // Remove ripple after animation completes
+    setTimeout(() => {
+      ripple.remove();
+    }, 600);
+  });
 });
 </script>
 
